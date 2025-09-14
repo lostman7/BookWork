@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Weaver</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-color: #282c34;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 300px;
+            padding: 1rem;
+            background-color: #1c1f24;
+            border-right: 1px solid #444;
+            overflow-y: auto;
+        }
+        .sidebar:last-of-type {
+            border-right: none;
+            border-left: 1px solid #444;
+        }
+        .main-panel {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        h1, h2, h3 {
+            color: #61dafb;
+            border-bottom: 1px solid #444;
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        input, textarea, select {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: #282c34;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #61dafb;
+            color: #282c34;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+        button:hover { background-color: #21a1f2; }
+        .story-display {
+            flex-grow: 1;
+            background-color: #1c1f24;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 1rem;
+            white-space: pre-wrap;
+            margin-bottom: 1rem;
+        }
+        .prompt-form { display: flex; }
+        .prompt-form input { flex-grow: 1; margin-right: 1rem; }
+        .character-list { list-style: none; padding: 0; }
+        .character-item {
+            background-color: #282c34;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .character-item.selected { background-color: #61dafb; color: #282c34; }
+        .delete-btn {
+            background-color: #ff4d4d;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            width: auto;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- World Background Sidebar -->
+    <div class="sidebar">
+        <h2>World Background</h2>
+        <div class="form-group">
+            <label for="where">Where</label>
+            <input id="where" name="where">
+        </div>
+        <div class="form-group">
+            <label for="when">When</label>
+            <input id="when" name="when">
+        </div>
+        <div class="form-group">
+            <label for="what">What's Happening</label>
+            <textarea id="what" name="what" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="tone">Tone/Style</label>
+            <input id="tone" name="tone">
+        </div>
+        <div class="form-group">
+            <label for="rules">Rules</label>
+            <textarea id="rules" name="rules" rows="4"></textarea>
+        </div>
+    </div>
+
+    <!-- Main Story Panel -->
+    <div class="main-panel">
+        <h1>Story Weaver</h1>
+        <div class="story-display">Your story begins here...</div>
+        <div class="prompt-form">
+            <input type="text" id="prompt-input" placeholder="What happens next?">
+            <button id="generate-btn">Generate</button>
+        </div>
+    </div>
+
+    <!-- Character Sidebar -->
+    <div class="sidebar">
+        <h2>Characters</h2>
+        <ul class="character-list"></ul>
+        <h3 id="char-form-title">Add Character</h3>
+        <form id="char-form">
+            <input name="name" placeholder="Name" required>
+            <select name="role"><option>Protagonist</option><option>Antagonist</option><option>Side Character</option></select>
+            <textarea name="personality" placeholder="Personality/Speech"></textarea>
+            <textarea name="background" placeholder="Background/History"></textarea>
+            <textarea name="fate" placeholder="Fate/Fixed Outcomes"></textarea>
+            <button type="submit" id="char-submit-btn">Create</button>
+            <button type="button" id="char-new-btn" style="display:none;">New Character</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Mock Data Store ---
+            let world = {
+                where: 'A ruined city',
+                when: '20 years after the collapse',
+                what: 'A struggle for survival in a world reclaimed by nature and shadows.',
+                tone: 'Grim, dark, post-apocalyptic',
+                rules: '1. The infected are drawn to sound.\n2. Resources are scarce.\n3. Trust is a luxury.'
+            };
+            let characters = [];
+            let nextCharId = 1;
+            let selectedCharId = null;
+
+            // --- Element References ---
+            const worldForm = {
+                where: document.getElementById('where'),
+                when: document.getElementById('when'),
+                what: document.getElementById('what'),
+                tone: document.getElementById('tone'),
+                rules: document.getElementById('rules')
+            };
+            const storyDisplay = document.querySelector('.story-display');
+            const promptInput = document.getElementById('prompt-input');
+            const generateBtn = document.getElementById('generate-btn');
+            const charList = document.querySelector('.character-list');
+            const charForm = document.getElementById('char-form');
+            const charFormTitle = document.getElementById('char-form-title');
+            const charSubmitBtn = document.getElementById('char-submit-btn');
+            const newCharBtn = document.getElementById('char-new-btn');
+
+            // --- Render Functions ---
+            function renderWorld() {
+                for (const key in worldForm) {
+                    worldForm[key].value = world[key];
+                }
+            }
+
+            function renderCharacters() {
+                charList.innerHTML = '';
+                characters.forEach(char => {
+                    const li = document.createElement('li');
+                    li.className = 'character-item';
+                    li.dataset.id = char.id;
+                    if (char.id === selectedCharId) {
+                        li.classList.add('selected');
+                    }
+                    li.innerHTML = `<span>${char.name}</span><button class="delete-btn" data-id="${char.id}">X</button>`;
+                    charList.appendChild(li);
+                });
+            }
+
+            // --- Update Functions ---
+            function updateWorldData() {
+                for (const key in worldForm) {
+                    world[key] = worldForm[key].value;
+                }
+                console.log("World data saved:", world);
+            }
+
+            function resetCharForm() {
+                charForm.reset();
+                selectedCharId = null;
+                charFormTitle.textContent = 'Add Character';
+                charSubmitBtn.textContent = 'Create';
+                newCharBtn.style.display = 'none';
+            }
+
+            // --- Initial Load ---
+            renderWorld();
+            renderCharacters();
+
+            // --- Event Listeners ---
+            Object.values(worldForm).forEach(input => input.addEventListener('change', updateWorldData));
+
+            charForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(charForm);
+                const charData = Object.fromEntries(formData.entries());
+
+                if (selectedCharId) { // Update
+                    const index = characters.findIndex(c => c.id === selectedCharId);
+                    characters[index] = { ...characters[index], ...charData };
+                } else { // Create
+                    charData.id = nextCharId++;
+                    characters.push(charData);
+                }
+                renderCharacters();
+                resetCharForm();
+            });
+
+            charList.addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.closest('.character-item')) {
+                    const li = target.closest('.character-item');
+                    const id = parseInt(li.dataset.id);
+                    if (target.classList.contains('delete-btn')) {
+                        characters = characters.filter(c => c.id !== id);
+                        if (selectedCharId === id) resetCharForm();
+                        renderCharacters();
+                    } else {
+                        selectedCharId = id;
+                        const char = characters.find(c => c.id === id);
+                        for (const key in char) {
+                            if(charForm.elements[key]) charForm.elements[key].value = char[key];
+                        }
+                        charFormTitle.textContent = 'Edit Character';
+                        charSubmitBtn.textContent = 'Update';
+                        newCharBtn.style.display = 'inline-block';
+                        renderCharacters(); // to update selection style
+                    }
+                }
+            });
+
+            newCharBtn.addEventListener('click', resetCharForm);
+
+            generateBtn.addEventListener('click', () => {
+                const prompt = promptInput.value;
+                if (!prompt) return;
+
+                const characterNames = characters.map(c => c.name).join(', ') || 'no one';
+                const generatedScene = `(Mock response based on the prompt: "${prompt}")\n\nThe air is thick with the ${world.tone} stench of decay. The scene involves ${characterNames}. They move cautiously through the rubble, ever-watchful.`;
+
+                const currentStory = storyDisplay.textContent === 'Your story begins here...' ? '' : storyDisplay.textContent;
+                storyDisplay.textContent = `${currentStory}\n\n> ${prompt}\n\n${generatedScene}`;
+                promptInput.value = '';
+            });
+        });
+    </script>
+</body>
+</html>
