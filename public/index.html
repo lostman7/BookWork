@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Weaver</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- World Background Sidebar -->
+    <div class="sidebar" id="world-sidebar">
+        <h2>World Background</h2>
+        <div class="form-group">
+            <label for="where">Where</label>
+            <input id="where" name="where">
+        </div>
+        <div class="form-group">
+            <label for="when">When</label>
+            <input id="when" name="when">
+        </div>
+        <div class="form-group">
+            <label for="what">What's Happening</label>
+            <textarea id="what" name="what" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="tone">Tone/Style</label>
+            <input id="tone" name="tone">
+        </div>
+        <div class="form-group">
+            <label for="rules">Rules</label>
+            <textarea id="rules" name="rules" rows="4"></textarea>
+        </div>
+    </div>
+
+    <!-- Main Story Panel -->
+    <div class="main-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>Story Weaver</h1>
+            <div class="form-group">
+                <label for="mode-switch">Mode:</label>
+                <select id="mode-switch">
+                    <option value="writing">Writing</option>
+                    <option value="planning">Planning</option>
+                </select>
+            </div>
+        </div>
+        <div class="story-display">Your story begins here...</div>
+        <div class="prompt-form">
+            <input type="text" id="prompt-input" placeholder="What happens next?">
+            <button id="generate-btn">Generate</button>
+        </div>
+        <div class="form-group" style="margin-top: 1rem; display: flex; align-items: center;">
+            <input type="checkbox" id="memory-toggle" checked style="width: auto; margin-right: 0.5rem;">
+            <label for="memory-toggle" style="margin-bottom: 0;">Inject Global Memory</label>
+        </div>
+        <button id="save-link-btn" style="margin-top: 1rem; background-color: #5c6bc0;">Save & Link New Info</button>
+    </div>
+
+    <!-- Character Sidebar -->
+    <div class="sidebar" id="character-sidebar">
+        <h2>Characters</h2>
+        <ul class="character-list"></ul>
+        <h3 id="char-form-title">Add Character</h3>
+        <form id="char-form">
+            <input name="name" placeholder="Name" required>
+            <select name="role"><option>Protagonist</option><option>Antagonist</option><option>Side Character</option></select>
+            <textarea name="personality" placeholder="Personality/Speech"></textarea>
+            <textarea name="background" placeholder="Background/History"></textarea>
+            <textarea name="fate" placeholder="Fate/Fixed Outcomes"></textarea>
+            <button type="submit" id="char-submit-btn">Create</button>
+            <button type="button" id="char-new-btn" style="display:none;">New Character</button>
+        </form>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
