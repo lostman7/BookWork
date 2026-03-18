@@ -8,6 +8,15 @@ const sourceList = document.getElementById('source-list');
 const panelCacheBadge = document.getElementById('panel-cache-badge');
 const canvasCacheBadge = document.getElementById('canvas-cache-badge');
 const refreshButtons = document.querySelectorAll('.refresh-button');
+const panelComposer = document.getElementById('panel-composer');
+const panelInput = document.getElementById('panel-input');
+const chatStream = document.getElementById('chat-stream');
+const panelTaskCallout = document.getElementById('panel-task-callout');
+const panelTaskText = document.getElementById('panel-task-text');
+const canvasStatusText = document.getElementById('canvas-status-text');
+const canvasModePill = document.getElementById('canvas-mode-pill');
+const canvasLogText = document.getElementById('canvas-log-text');
+const memoryLogText = document.getElementById('memory-log-text');
 
 const ROLE_FIELDS = {
   panel: {
@@ -31,6 +40,57 @@ function renderEntries(listElement, entries) {
     li.textContent = `${entry.name}${entry.type === 'directory' ? '/' : ''}`;
     listElement.appendChild(li);
   });
+}
+
+function appendChatMessage(kind, text) {
+  const message = document.createElement('div');
+  message.className = `message ${kind}`;
+  message.textContent = text;
+  chatStream.appendChild(message);
+  chatStream.scrollTop = chatStream.scrollHeight;
+}
+
+function summarizeTask(userText) {
+  const trimmed = userText.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const short = trimmed.length > 90 ? `${trimmed.slice(0, 87)}...` : trimmed;
+  return {
+    request: short,
+    taskLabel: `review_and_revise · ${short}`,
+    canvasStatus: `Canvas AI is reviewing the delegated task: “${short}”`,
+    memorySummary: 'Pulled shared project memory, story context, and any matching character/source records.',
+    assistantReply: `Got it. I’ll handle the conversation here, turn that into a structured canvas task, and report back after the Canvas AI finishes its review.`
+  };
+}
+
+function runPanelHandshake(userText) {
+  const task = summarizeTask(userText);
+  if (!task) {
+    return;
+  }
+
+  appendChatMessage('user', userText.trim());
+  appendChatMessage('assistant', task.assistantReply);
+
+  panelTaskCallout.classList.remove('hidden');
+  panelTaskText.textContent = task.taskLabel;
+  canvasStatusText.textContent = task.canvasStatus;
+  canvasModePill.textContent = 'Delegated by Panel AI';
+  canvasLogText.textContent = `Scope confirmed for delegated task: ${task.request}`;
+  memoryLogText.textContent = task.memorySummary;
+
+  window.setTimeout(() => {
+    appendChatMessage(
+      'assistant',
+      `The Canvas AI finished its first pass. Review the canvas and logs, and if you want, I can send a follow-up instruction or tighten the scope.`
+    );
+    canvasStatusText.textContent = `Canvas AI completed the delegated review for: “${task.request}”`;
+    canvasModePill.textContent = 'Suggest only';
+    canvasLogText.textContent = `Canvas AI completed the delegated task for: ${task.request}`;
+  }, 450);
 }
 
 function fillModelSelect(selectElement, models, selectedModel) {
@@ -139,6 +199,18 @@ openSettingsButton.addEventListener('click', () => {
 
 openWorkspaceButton.addEventListener('click', async () => {
   await window.bookwork.openWorkspace();
+});
+
+panelComposer.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const value = panelInput.value.trim();
+  if (!value) {
+    return;
+  }
+
+  runPanelHandshake(value);
+  panelInput.value = '';
+  panelInput.focus();
 });
 
 settingsForm.elements['panel-provider'].addEventListener('change', () => loadModelsForRole('panel'));

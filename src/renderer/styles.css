@@ -136,6 +136,7 @@ textarea { min-height: 120px; resize: vertical; }
 }
 .message.user { background: rgba(79, 70, 229, 0.12); }
 .message.assistant { background: rgba(139, 92, 246, 0.12); }
+.hidden { display: none; }
 .task-callout { display: grid; gap: 4px; }
 .composer { display: grid; gap: 12px; margin-top: auto; }
 .full-width { width: 100%; }
@@ -228,4 +229,16 @@ textarea { min-height: 120px; resize: vertical; }
 .refresh-button[disabled] {
   opacity: 0.6;
   cursor: progress;
+}
+
+.canvas-status-card {
+  display: grid;
+  gap: 6px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(20, 31, 45, 0.65);
+}
+.canvas-status-card span {
+  color: var(--muted);
 }

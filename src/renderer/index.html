@@ -37,19 +37,19 @@
             <span class="status-pill">Ready</span>
           </div>
 
-          <div class="chat-stream">
-            <div class="message user">Check page 47 for continuity against Ava's sheet, then fix grammar if it is obvious.</div>
-            <div class="message assistant">Got it. I’ll send a structured review task to the Canvas AI and report back with findings.</div>
-            <div class="task-callout">
-              <strong>Delegated:</strong>
-              <span>review_and_revise · page 47 · suggest_only</span>
-            </div>
+          <div id="chat-stream" class="chat-stream">
+            <div class="message assistant">Talk to the Panel AI here. It will be the only user-facing chat surface and will delegate document work to the Canvas AI for you.</div>
           </div>
 
-          <div class="composer">
-            <textarea placeholder="Talk to the Panel AI here..."></textarea>
-            <button class="primary-button full-width">Send instruction</button>
+          <div id="panel-task-callout" class="task-callout hidden">
+            <strong>Delegated:</strong>
+            <span id="panel-task-text"></span>
           </div>
+
+          <form id="panel-composer" class="composer">
+            <textarea id="panel-input" placeholder="Talk to the Panel AI here..."></textarea>
+            <button id="send-instruction" type="submit" class="primary-button full-width">Send instruction</button>
+          </form>
         </aside>
 
         <section class="canvas-column card">
@@ -58,7 +58,7 @@
               <p class="eyebrow">Canvas AI</p>
               <h2>Story canvas</h2>
             </div>
-            <span class="status-pill muted">Suggest only</span>
+            <span id="canvas-mode-pill" class="status-pill muted">Suggest only</span>
           </div>
 
           <div class="canvas-panels">
@@ -75,6 +75,10 @@
                   results will appear.
                 </p>
               </article>
+              <div id="canvas-status-card" class="canvas-status-card">
+                <strong>Canvas AI status</strong>
+                <span id="canvas-status-text">Waiting for the Panel AI to delegate a document task.</span>
+              </div>
             </section>
 
             <section>
@@ -109,11 +113,11 @@
           <div class="log-stack">
             <div class="log-entry ok">
               <strong>Canvas accepted task</strong>
-              <span>Scope confirmed: page 47 · chapter 7</span>
+              <span id="canvas-log-text">Scope confirmed: waiting for the first delegated task.</span>
             </div>
             <div class="log-entry warn">
               <strong>Memory pulled</strong>
-              <span>character:ava · source:outline/chapter_7</span>
+              <span id="memory-log-text">No retrieval used yet.</span>
             </div>
             <div class="log-entry info">
               <strong>Panel cache budget</strong>

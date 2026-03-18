@@ -45,7 +45,7 @@ That matches your idea of a shared story area plus separate role-aware memory bu
 
 The current app shell is designed around this structure:
 
-- **Left sidebar**: Panel AI chat and delegation controls.
+- **Left sidebar**: the only user-facing chat surface; the writer talks here and the Panel AI delegates work inward to the Canvas AI.
 - **Center canvas**: manuscript surface and workspace file lists.
 - **Right log rail**: handshake visibility, source usage, and memory state.
 - **Top memory bar**: Story, Characters, Lore, Sources, and Logs tabs.
@@ -79,7 +79,7 @@ For Ollama, the important controls to expose are:
 - visible runtime state,
 - and a clear indication that the app maps these settings to Ollama context controls like `num_ctx` and the global context configuration.
 
-The main UX goal is to make Ollama setup feel less confusing than editing raw settings by hand. The settings screen now aims to populate model dropdowns from provider catalogs so the user can pick from real available models instead of memorizing names.
+The main UX goal is to make Ollama setup feel less confusing than editing raw settings by hand. The settings screen now aims to populate model dropdowns from provider catalogs so the user can pick from real available models instead of memorizing names. The interaction rule is simple: the human only chats with the Panel AI, and the Canvas AI only receives delegated work from the Panel AI.
 
 ## Running the app
 
