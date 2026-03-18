@@ -55,8 +55,8 @@ The current app shell is designed around this structure:
 
 The app shell includes a settings dialog for:
 
-- Panel AI provider and model,
-- Canvas AI provider and model,
+- Panel AI provider and model dropdown,
+- Canvas AI provider and model dropdown,
 - separate context windows for each role,
 - compute preference for each role,
 - keep-alive behavior,
@@ -79,7 +79,7 @@ For Ollama, the important controls to expose are:
 - visible runtime state,
 - and a clear indication that the app maps these settings to Ollama context controls like `num_ctx` and the global context configuration.
 
-The main UX goal is to make Ollama setup feel less confusing than editing raw settings by hand.
+The main UX goal is to make Ollama setup feel less confusing than editing raw settings by hand. The settings screen now aims to populate model dropdowns from provider catalogs so the user can pick from real available models instead of memorizing names.
 
 ## Running the app
 

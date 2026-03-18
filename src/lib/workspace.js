@@ -1,10 +1,12 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const { PROVIDER_CATALOG } = require('./providerCatalog');
 
 const DEFAULT_SETTINGS = {
   panelAi: {
     provider: 'ollama',
     model: 'llama3.2:3b',
+    providerBaseUrl: PROVIDER_CATALOG.ollama.endpoint,
     contextWindow: 4096,
     computePreference: 'gpu',
     temperature: 0.7,
@@ -13,6 +15,7 @@ const DEFAULT_SETTINGS = {
   canvasAi: {
     provider: 'lmstudio',
     model: 'deepseek-r1-distill-qwen-14b',
+    providerBaseUrl: PROVIDER_CATALOG.lmstudio.endpoint,
     contextWindow: 16384,
     computePreference: 'system-memory',
     temperature: 0.2,

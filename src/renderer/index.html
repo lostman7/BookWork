@@ -140,18 +140,26 @@
 
         <div class="settings-grid">
           <section class="settings-section">
-            <h3>Panel AI</h3>
-            <label>Provider <select name="panel-provider"><option value="ollama">Ollama</option><option value="lmstudio">LM Studio</option><option value="openrouter">OpenRouter</option></select></label>
-            <label>Model <input name="panel-model" type="text" /></label>
+            <div class="settings-section-header">
+              <h3>Panel AI</h3>
+              <button type="button" class="ghost-button refresh-button" data-role="panel">Refresh models</button>
+            </div>
+            <label>Provider <select name="panel-provider"><option value="ollama">Ollama</option><option value="lmstudio">LM Studio</option><option value="openrouter">OpenRouter</option><option value="openai">OpenAI</option></select></label>
+            <label>Model <select name="panel-model"></select></label>
+            <p id="panel-model-status" class="select-hint">Select a provider to load models.</p>
             <label>Context window <input name="panel-context" type="number" min="1024" step="1024" /></label>
             <label>Compute preference <select name="panel-compute"><option value="gpu">GPU</option><option value="system-memory">System memory</option><option value="auto">Auto</option></select></label>
             <label>Keep alive <input name="panel-keepalive" type="text" /></label>
           </section>
 
           <section class="settings-section">
-            <h3>Canvas AI</h3>
+            <div class="settings-section-header">
+              <h3>Canvas AI</h3>
+              <button type="button" class="ghost-button refresh-button" data-role="canvas">Refresh models</button>
+            </div>
             <label>Provider <select name="canvas-provider"><option value="ollama">Ollama</option><option value="lmstudio">LM Studio</option><option value="openrouter">OpenRouter</option><option value="openai">OpenAI</option></select></label>
-            <label>Model <input name="canvas-model" type="text" /></label>
+            <label>Model <select name="canvas-model"></select></label>
+            <p id="canvas-model-status" class="select-hint">Select a provider to load models.</p>
             <label>Context window <input name="canvas-context" type="number" min="1024" step="1024" /></label>
             <label>Compute preference <select name="canvas-compute"><option value="system-memory">System memory</option><option value="gpu">GPU</option><option value="auto">Auto</option></select></label>
             <label>Keep alive <input name="canvas-keepalive" type="text" /></label>

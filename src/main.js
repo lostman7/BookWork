@@ -6,6 +6,7 @@ const {
   saveSettings,
   listWorkspaceEntries
 } = require('./lib/workspace');
+const { fetchModelsForProvider } = require('./lib/providerCatalog');
 
 let state;
 
@@ -65,6 +66,9 @@ app.whenReady().then(() => {
     await shell.openPath(state.workspace.root);
     return state.workspace.root;
   });
+  ipcMain.handle('bookwork:get-models', async (_event, provider, options = {}) =>
+    fetchModelsForProvider(provider, options)
+  );
 
   createMainWindow();
 
