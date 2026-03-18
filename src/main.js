@@ -5,6 +5,8 @@ const {
   createWorkspaceEntry,
   loadSettings,
   saveSettings,
+  loadChatHistory,
+  saveChatHistory,
   listWorkspaceEntries,
   ROLE_PRESETS
 } = require('./lib/workspace');
@@ -28,6 +30,7 @@ function getBootstrapPayload() {
       canvas: path.join(state.workspace.canvasLogs, 'latest.log')
     },
     settings: state.settings,
+    chatHistory: state.chatHistory,
     presets: ROLE_PRESETS
   };
 }
@@ -55,12 +58,16 @@ app.whenReady().then(() => {
   const bookworkRoot = path.join(baseDir, 'BookWorkData');
   const workspace = createWorkspaceLayout(bookworkRoot);
   const settingsPath = path.join(bookworkRoot, 'settings.json');
+  const historyPath = path.join(bookworkRoot, 'chat-history.json');
   const settings = loadSettings(settingsPath);
+  const chatHistory = loadChatHistory(historyPath);
 
   state = {
     workspace,
     settingsPath,
-    settings
+    historyPath,
+    settings,
+    chatHistory
   };
 
   ipcMain.handle('bookwork:get-bootstrap', async () => getBootstrapPayload());
@@ -71,6 +78,10 @@ app.whenReady().then(() => {
   ipcMain.handle('bookwork:open-workspace', async () => {
     await shell.openPath(state.workspace.root);
     return state.workspace.root;
+  });
+  ipcMain.handle('bookwork:save-chat-history', async (_event, history) => {
+    state.chatHistory = saveChatHistory(state.historyPath, history);
+    return state.chatHistory;
   });
   ipcMain.handle('bookwork:get-models', async (_event, provider, options = {}) =>
     fetchModelsForProvider(provider, options)

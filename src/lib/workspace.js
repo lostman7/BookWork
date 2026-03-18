@@ -164,6 +164,23 @@ function saveSettings(settingsPath, settings) {
   return merged;
 }
 
+function loadChatHistory(historyPath) {
+  if (!fs.existsSync(historyPath)) {
+    return [];
+  }
+
+  try {
+    return JSON.parse(fs.readFileSync(historyPath, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
+function saveChatHistory(historyPath, history) {
+  fs.writeFileSync(historyPath, JSON.stringify(history, null, 2));
+  return history;
+}
+
 function listWorkspaceEntries(dirPath) {
   if (!fs.existsSync(dirPath)) {
     return [];
@@ -223,5 +240,7 @@ module.exports = {
   createWorkspaceEntry,
   loadSettings,
   saveSettings,
+  loadChatHistory,
+  saveChatHistory,
   listWorkspaceEntries
 };

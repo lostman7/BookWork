@@ -89,6 +89,7 @@ const TAB_COPY = {
 
 let bootstrap;
 let activeMemoryTab = 'story';
+let chatHistory = [];
 
 function renderEntries(listElement, entries) {
   listElement.innerHTML = '';
@@ -107,12 +108,32 @@ function renderWorkspaceLists(workspace) {
   renderEntries(logList, workspace.logs);
 }
 
-function appendChatMessage(kind, text) {
-  const message = document.createElement('div');
-  message.className = `message ${kind}`;
-  message.textContent = text;
-  chatStream.appendChild(message);
+function renderChatHistory() {
+  chatStream.innerHTML = '';
+  if (chatHistory.length === 0) {
+    chatHistory = [{ kind: 'assistant', text: 'Talk to the Panel AI here. It can chat naturally about your story, and when you want actual document work, it will delegate that to the Canvas AI.' }];
+  }
+
+  chatHistory.forEach((entry) => {
+    const message = document.createElement('div');
+    message.className = `message ${entry.kind}`;
+    message.textContent = entry.text;
+    chatStream.appendChild(message);
+  });
+
   chatStream.scrollTop = chatStream.scrollHeight;
+}
+
+function persistChatHistory() {
+  window.bookwork.saveChatHistory(chatHistory).catch((error) => {
+    console.error('Failed to save chat history', error);
+  });
+}
+
+function appendChatMessage(kind, text) {
+  chatHistory.push({ kind, text });
+  renderChatHistory();
+  persistChatHistory();
 }
 
 function showToast(message) {
@@ -171,7 +192,9 @@ function getSelectionState() {
   return {
     selectedText,
     startLine,
-    endLine
+    endLine,
+    selectionStart,
+    selectionEnd
   };
 }
 
@@ -187,6 +210,24 @@ function updateSelectionState() {
   selectionBadge.textContent = `Lines ${selection.startLine}-${selection.endLine}`;
   selectionFocusText.textContent = `Selected lines ${selection.startLine}-${selection.endLine}: “${selection.selectedText.slice(0, 160)}”`;
   canvasEditorShell.classList.add('selection-active');
+}
+
+function applyCanvasRewrite(selection) {
+  const rewritten = selection.selectedText
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\s([,.;!?])/g, '$1');
+
+  const nextValue = `${canvasEditor.value.slice(0, selection.selectionStart)}${rewritten}${canvasEditor.value.slice(selection.selectionEnd)}`;
+  canvasEditor.value = nextValue;
+  canvasEditor.selectionStart = selection.selectionStart;
+  canvasEditor.selectionEnd = selection.selectionStart + rewritten.length;
+  syncLineNumbers();
+  updateSelectionState();
+  showToast(`Applied rewrite to lines ${selection.startLine}-${selection.endLine}`);
 }
 
 function interpretChatIntent(message) {
@@ -228,6 +269,7 @@ function runPanelHandshake(userText) {
 
   appendChatMessage('assistant', intent.response);
 
+  const shouldApplyRewrite = Boolean(intent.selection && /rewrite|edit|tighten|fix/.test(userText.toLowerCase()));
   const selectionDetail = intent.selection
     ? ` · lines ${intent.selection.startLine}-${intent.selection.endLine}`
     : '';
@@ -241,9 +283,15 @@ function runPanelHandshake(userText) {
     : 'Pulled shared project memory and current canvas scope.';
 
   window.setTimeout(() => {
+    if (shouldApplyRewrite) {
+      applyCanvasRewrite(intent.selection);
+    }
+
     appendChatMessage(
       'assistant',
-      `The Canvas AI finished a first pass on ${intent.focusLabel}. If you want, I can send a tighter rewrite, check continuity again, or work on another highlighted section.`
+      shouldApplyRewrite
+        ? `The Canvas AI applied a first-pass rewrite to ${intent.focusLabel}. If you want, I can keep revising it or compare it against the outline next.`
+        : `The Canvas AI finished a first pass on ${intent.focusLabel}. If you want, I can send a tighter rewrite, check continuity again, or work on another highlighted section.`
     );
     canvasStatusText.textContent = `Canvas AI completed the delegated review for ${intent.focusLabel}.`;
     canvasModePill.textContent = 'Suggest only';
@@ -344,7 +392,9 @@ function updateMemoryBadges(settings) {
 
 async function bootstrapApp() {
   bootstrap = await window.bookwork.getBootstrap();
+  chatHistory = Array.isArray(bootstrap.chatHistory) ? bootstrap.chatHistory : [];
   renderWorkspaceLists(bootstrap.workspace);
+  renderChatHistory();
   await hydrateSettingsForm(bootstrap.settings);
   updateMemoryBadges(bootstrap.settings);
   renderPreset(panelPresetTitle, panelPresetMission, panelPresetCommands, bootstrap.presets.panel);

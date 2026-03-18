@@ -5,5 +5,6 @@ contextBridge.exposeInMainWorld('bookwork', {
   saveSettings: (settings) => ipcRenderer.invoke('bookwork:save-settings', settings),
   openWorkspace: () => ipcRenderer.invoke('bookwork:open-workspace'),
   getModels: (provider, options) => ipcRenderer.invoke('bookwork:get-models', provider, options),
-  createEntry: (payload) => ipcRenderer.invoke('bookwork:create-entry', payload)
+  createEntry: (payload) => ipcRenderer.invoke('bookwork:create-entry', payload),
+  saveChatHistory: (history) => ipcRenderer.invoke('bookwork:save-chat-history', history)
 });
