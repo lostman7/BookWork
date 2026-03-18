@@ -48,7 +48,7 @@ The current app shell is designed around this structure:
 - **Left sidebar**: the only user-facing chat surface; the writer talks here and the Panel AI delegates work inward to the Canvas AI.
 - **Center canvas**: manuscript surface and workspace file lists.
 - **Right log rail**: handshake visibility, source usage, and memory state.
-- **Top memory bar**: Story, Characters, Lore, Sources, and Logs tabs.
+- **Top memory bar**: Story, Characters, Lore, Sources, and Logs tabs with an add action that saves new items into the local workspace.
 - **Settings button**: model routing, context sizes, compute preference, and cache settings.
 
 ## Settings strategy
@@ -57,6 +57,7 @@ The app shell includes a settings dialog for:
 
 - Panel AI provider and model dropdown,
 - Canvas AI provider and model dropdown,
+- locked Panel/Canvas mission presets and shared handshake commands,
 - separate context windows for each role,
 - compute preference for each role,
 - keep-alive behavior,

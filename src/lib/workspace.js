@@ -2,6 +2,21 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { PROVIDER_CATALOG } = require('./providerCatalog');
 
+const ROLE_PRESETS = {
+  panel: {
+    title: 'Panel AI preset',
+    mission:
+      'You are the writer-facing editor inside BookWork. Talk only to the user, clarify intent, turn requests into structured canvas tasks, and explain canvas results back to the user.',
+    commands: ['review_and_revise', 'continuity_check', 'rewrite_selection', 'compare_scene_to_outline']
+  },
+  canvas: {
+    title: 'Canvas AI preset',
+    mission:
+      'You are the document-facing canvas agent inside BookWork. You do not talk directly to the user. You execute delegated editor tasks, inspect manuscript scope, and return structured findings or suggestions.',
+    commands: ['accepted', 'completed', 'blocked', 'sources_used', 'tracked_change']
+  }
+};
+
 const DEFAULT_SETTINGS = {
   panelAi: {
     provider: 'ollama',
@@ -66,6 +81,7 @@ function createWorkspaceLayout(baseDir) {
     root: workspaceRoot,
     story: path.join(workspaceRoot, 'story'),
     characters: path.join(workspaceRoot, 'characters'),
+    lore: path.join(workspaceRoot, 'lore'),
     sources: path.join(workspaceRoot, 'sources'),
     logs: path.join(workspaceRoot, 'logs'),
     panelLogs: path.join(workspaceRoot, 'logs', 'panel'),
@@ -82,6 +98,10 @@ function createWorkspaceLayout(baseDir) {
     '# Draft\n\nStart writing here. The Canvas AI will review this document while the Panel AI handles chat and delegation.\n'
   );
   writeJsonIfMissing(path.join(directories.characters, 'ava-stone.json'), SAMPLE_CHARACTER);
+  writeTextIfMissing(
+    path.join(directories.lore, 'world-rules.md'),
+    '# World Rules\n\nStore shared lore, setting rules, timelines, and canon notes here.\n'
+  );
   writeTextIfMissing(
     path.join(directories.sources, 'README.md'),
     '# Sources\n\nDrop outlines, research notes, and style guides here for shared retrieval.\n'
@@ -155,9 +175,52 @@ function listWorkspaceEntries(dirPath) {
   }));
 }
 
+function slugify(value) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'untitled';
+}
+
+function createWorkspaceEntry(workspace, section, name, content = '') {
+  const targetDir = workspace[section];
+  if (!targetDir) {
+    throw new Error(`Unknown workspace section: ${section}`);
+  }
+
+  const safeBase = slugify(name);
+  let extension = '.md';
+  let body = content.trim();
+
+  if (section === 'characters') {
+    extension = '.md';
+    body = body || `# ${name}\n\n- Role: \n- Voice: \n- Notes: \n`;
+  } else if (section === 'story') {
+    body = body || `# ${name}\n\nStart drafting here.\n`;
+  } else if (section === 'lore') {
+    body = body || `# ${name}\n\nAdd canon, lore, timelines, or setting rules here.\n`;
+  } else if (section === 'sources') {
+    body = body || `# ${name}\n\nAdd source notes, references, or pasted research here.\n`;
+  } else if (section === 'logs') {
+    extension = '.log';
+    body = body || `[note] ${name}\n`;
+  }
+
+  const filePath = path.join(targetDir, `${safeBase}${extension}`);
+  fs.writeFileSync(filePath, body.endsWith('\n') ? body : `${body}\n`);
+
+  return {
+    section,
+    filePath,
+    name: path.basename(filePath)
+  };
+}
+
 module.exports = {
+  ROLE_PRESETS,
   DEFAULT_SETTINGS,
   createWorkspaceLayout,
+  createWorkspaceEntry,
   loadSettings,
   saveSettings,
   listWorkspaceEntries

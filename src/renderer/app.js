@@ -1,10 +1,22 @@
 const settingsDialog = document.getElementById('settings-dialog');
 const settingsForm = document.getElementById('settings-form');
+const memoryDialog = document.getElementById('memory-dialog');
+const memoryForm = document.getElementById('memory-form');
 const openSettingsButton = document.getElementById('open-settings');
 const openWorkspaceButton = document.getElementById('open-workspace');
+const addMemoryItemButton = document.getElementById('add-memory-item');
+const memoryDialogTitle = document.getElementById('memory-dialog-title');
+const memoryDialogHint = document.getElementById('memory-dialog-hint');
+const memoryItemName = document.getElementById('memory-item-name');
+const memoryItemContent = document.getElementById('memory-item-content');
+const memoryBar = document.getElementById('memory-bar');
+const activeMemoryTitle = document.getElementById('active-memory-title');
+const activeMemoryDescription = document.getElementById('active-memory-description');
 const storyList = document.getElementById('story-list');
 const characterList = document.getElementById('character-list');
+const loreList = document.getElementById('lore-list');
 const sourceList = document.getElementById('source-list');
+const logList = document.getElementById('log-list');
 const panelCacheBadge = document.getElementById('panel-cache-badge');
 const canvasCacheBadge = document.getElementById('canvas-cache-badge');
 const refreshButtons = document.querySelectorAll('.refresh-button');
@@ -17,6 +29,12 @@ const canvasStatusText = document.getElementById('canvas-status-text');
 const canvasModePill = document.getElementById('canvas-mode-pill');
 const canvasLogText = document.getElementById('canvas-log-text');
 const memoryLogText = document.getElementById('memory-log-text');
+const panelPresetTitle = document.getElementById('panel-preset-title');
+const panelPresetMission = document.getElementById('panel-preset-mission');
+const panelPresetCommands = document.getElementById('panel-preset-commands');
+const canvasPresetTitle = document.getElementById('canvas-preset-title');
+const canvasPresetMission = document.getElementById('canvas-preset-mission');
+const canvasPresetCommands = document.getElementById('canvas-preset-commands');
 
 const ROLE_FIELDS = {
   panel: {
@@ -31,7 +49,31 @@ const ROLE_FIELDS = {
   }
 };
 
+const TAB_COPY = {
+  story: {
+    title: 'Story',
+    description: 'Select the working draft and create manuscript files here.'
+  },
+  characters: {
+    title: 'Characters',
+    description: 'Add character cards so both AIs can pull voices, roles, and continuity facts.'
+  },
+  lore: {
+    title: 'Lore',
+    description: 'Store canon, world rules, timeline notes, and setting details here.'
+  },
+  sources: {
+    title: 'Sources',
+    description: 'Drop outlines, references, research notes, and style guides here.'
+  },
+  logs: {
+    title: 'Logs',
+    description: 'Save operator notes or workflow logs that the system can inspect later.'
+  }
+};
+
 let bootstrap;
+let activeMemoryTab = 'story';
 
 function renderEntries(listElement, entries) {
   listElement.innerHTML = '';
@@ -42,12 +84,44 @@ function renderEntries(listElement, entries) {
   });
 }
 
+function renderWorkspaceLists(workspace) {
+  renderEntries(storyList, workspace.story);
+  renderEntries(characterList, workspace.characters);
+  renderEntries(loreList, workspace.lore);
+  renderEntries(sourceList, workspace.sources);
+  renderEntries(logList, workspace.logs);
+}
+
 function appendChatMessage(kind, text) {
   const message = document.createElement('div');
   message.className = `message ${kind}`;
   message.textContent = text;
   chatStream.appendChild(message);
   chatStream.scrollTop = chatStream.scrollHeight;
+}
+
+function renderPreset(cardTitle, missionNode, commandNode, preset) {
+  cardTitle.textContent = preset.title;
+  missionNode.textContent = preset.mission;
+  commandNode.innerHTML = '';
+
+  preset.commands.forEach((command) => {
+    const chip = document.createElement('span');
+    chip.className = 'command-chip';
+    chip.textContent = command;
+    commandNode.appendChild(chip);
+  });
+}
+
+function setActiveMemoryTab(tab) {
+  activeMemoryTab = tab;
+  activeMemoryTitle.textContent = TAB_COPY[tab].title;
+  activeMemoryDescription.textContent = TAB_COPY[tab].description;
+  addMemoryItemButton.textContent = `Add ${TAB_COPY[tab].title.slice(0, -1) || TAB_COPY[tab].title}`;
+
+  memoryBar.querySelectorAll('.memory-chip').forEach((chip) => {
+    chip.classList.toggle('active', chip.dataset.tab === tab);
+  });
 }
 
 function summarizeTask(userText) {
@@ -85,7 +159,7 @@ function runPanelHandshake(userText) {
   window.setTimeout(() => {
     appendChatMessage(
       'assistant',
-      `The Canvas AI finished its first pass. Review the canvas and logs, and if you want, I can send a follow-up instruction or tighten the scope.`
+      'The Canvas AI finished its first pass. Review the canvas and logs, and if you want, I can send a follow-up instruction or tighten the scope.'
     );
     canvasStatusText.textContent = `Canvas AI completed the delegated review for: “${task.request}”`;
     canvasModePill.textContent = 'Suggest only';
@@ -186,11 +260,12 @@ function updateMemoryBadges(settings) {
 
 async function bootstrapApp() {
   bootstrap = await window.bookwork.getBootstrap();
-  renderEntries(storyList, bootstrap.workspace.story);
-  renderEntries(characterList, bootstrap.workspace.characters);
-  renderEntries(sourceList, bootstrap.workspace.sources);
+  renderWorkspaceLists(bootstrap.workspace);
   await hydrateSettingsForm(bootstrap.settings);
   updateMemoryBadges(bootstrap.settings);
+  renderPreset(panelPresetTitle, panelPresetMission, panelPresetCommands, bootstrap.presets.panel);
+  renderPreset(canvasPresetTitle, canvasPresetMission, canvasPresetCommands, bootstrap.presets.canvas);
+  setActiveMemoryTab(activeMemoryTab);
 }
 
 openSettingsButton.addEventListener('click', () => {
@@ -211,6 +286,43 @@ panelComposer.addEventListener('submit', (event) => {
   runPanelHandshake(value);
   panelInput.value = '';
   panelInput.focus();
+});
+
+memoryBar.addEventListener('click', (event) => {
+  const button = event.target.closest('.memory-chip');
+  if (!button) {
+    return;
+  }
+
+  setActiveMemoryTab(button.dataset.tab);
+});
+
+addMemoryItemButton.addEventListener('click', () => {
+  memoryDialogTitle.textContent = `Add ${TAB_COPY[activeMemoryTab].title.slice(0, -1) || TAB_COPY[activeMemoryTab].title}`;
+  memoryDialogHint.textContent = `This item will be saved into ${TAB_COPY[activeMemoryTab].title}.`;
+  memoryItemName.value = '';
+  memoryItemContent.value = '';
+  memoryDialog.showModal();
+});
+
+memoryForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const payload = {
+    section: activeMemoryTab,
+    name: memoryItemName.value.trim(),
+    content: memoryItemContent.value
+  };
+
+  if (!payload.name) {
+    return;
+  }
+
+  const result = await window.bookwork.createEntry(payload);
+  bootstrap.workspace = result.workspace;
+  renderWorkspaceLists(bootstrap.workspace);
+  memoryDialog.close();
+  appendChatMessage('assistant', `Saved “${payload.name}” into ${TAB_COPY[activeMemoryTab].title}. Both AIs can now pull from it.`);
+  memoryLogText.textContent = `Updated shared memory from ${TAB_COPY[activeMemoryTab].title}: ${result.result.name}`;
 });
 
 settingsForm.elements['panel-provider'].addEventListener('change', () => loadModelsForRole('panel'));

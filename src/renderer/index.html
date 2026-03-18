@@ -10,8 +10,8 @@
     <div class="app-shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">BookWork</p>
-          <h1>Dual-model writing desk</h1>
+          <p class="brand-line">BOOKWORK</p>
+          <h1 class="title-line">Dual-model writing desk</h1>
         </div>
         <div class="topbar-actions">
           <button id="open-workspace" class="secondary-button">Open workspace</button>
@@ -19,13 +19,22 @@
         </div>
       </header>
 
-      <nav class="memory-bar card">
-        <button class="memory-chip active">Story</button>
-        <button class="memory-chip">Characters</button>
-        <button class="memory-chip">Lore</button>
-        <button class="memory-chip">Sources</button>
-        <button class="memory-chip">Logs</button>
-      </nav>
+      <section class="memory-panel card">
+        <div class="memory-panel-header">
+          <nav id="memory-bar" class="memory-bar">
+            <button class="memory-chip active" data-tab="story">Story</button>
+            <button class="memory-chip" data-tab="characters">Characters</button>
+            <button class="memory-chip" data-tab="lore">Lore</button>
+            <button class="memory-chip" data-tab="sources">Sources</button>
+            <button class="memory-chip" data-tab="logs">Logs</button>
+          </nav>
+          <button id="add-memory-item" class="ghost-button">Add item</button>
+        </div>
+        <div class="memory-status">
+          <strong id="active-memory-title">Story</strong>
+          <span id="active-memory-description">Select the working draft and create manuscript files here.</span>
+        </div>
+      </section>
 
       <main class="workspace-grid">
         <aside class="panel-column card">
@@ -82,8 +91,13 @@
             </section>
 
             <section>
-              <h3>Workspace folders</h3>
-              <div class="folder-columns">
+              <div class="section-header compact-header">
+                <div>
+                  <h3>Workspace folders</h3>
+                  <p class="eyebrow">Top-bar items are saved into the local workspace.</p>
+                </div>
+              </div>
+              <div class="folder-columns five-up">
                 <div>
                   <h4>Story</h4>
                   <ul id="story-list" class="item-list"></ul>
@@ -93,8 +107,16 @@
                   <ul id="character-list" class="item-list"></ul>
                 </div>
                 <div>
+                  <h4>Lore</h4>
+                  <ul id="lore-list" class="item-list"></ul>
+                </div>
+                <div>
                   <h4>Sources</h4>
                   <ul id="source-list" class="item-list"></ul>
+                </div>
+                <div>
+                  <h4>Logs</h4>
+                  <ul id="log-list" class="item-list"></ul>
                 </div>
               </div>
             </section>
@@ -131,6 +153,29 @@
         </aside>
       </main>
     </div>
+
+    <dialog id="memory-dialog" class="settings-dialog">
+      <form method="dialog" class="settings-card narrow-card" id="memory-form">
+        <div class="section-header settings-header">
+          <div>
+            <p class="eyebrow">Project memory</p>
+            <h2 id="memory-dialog-title">Add item</h2>
+          </div>
+          <button value="cancel" class="secondary-button">Close</button>
+        </div>
+
+        <div class="settings-section">
+          <label>Name <input id="memory-item-name" name="memory-item-name" type="text" required /></label>
+          <label>Content <textarea id="memory-item-content" name="memory-item-content" placeholder="Add story text, character notes, lore, source notes, or log details here."></textarea></label>
+          <p id="memory-dialog-hint" class="settings-note">This item will be saved into the selected workspace section.</p>
+        </div>
+
+        <menu class="settings-actions">
+          <button value="cancel" class="secondary-button">Cancel</button>
+          <button id="save-memory-item" value="default" class="primary-button">Save item</button>
+        </menu>
+      </form>
+    </dialog>
 
     <dialog id="settings-dialog" class="settings-dialog">
       <form method="dialog" class="settings-card" id="settings-form">
@@ -180,6 +225,21 @@
             </p>
           </section>
         </div>
+
+        <section class="preset-grid">
+          <article class="preset-card">
+            <p class="eyebrow">Locked preset</p>
+            <h3 id="panel-preset-title">Panel AI preset</h3>
+            <p id="panel-preset-mission"></p>
+            <div id="panel-preset-commands" class="command-list"></div>
+          </article>
+          <article class="preset-card">
+            <p class="eyebrow">Locked preset</p>
+            <h3 id="canvas-preset-title">Canvas AI preset</h3>
+            <p id="canvas-preset-mission"></p>
+            <div id="canvas-preset-commands" class="command-list"></div>
+          </article>
+        </section>
 
         <menu class="settings-actions">
           <button value="cancel" class="secondary-button">Cancel</button>

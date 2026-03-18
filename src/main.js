@@ -2,9 +2,11 @@ const path = require('node:path');
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const {
   createWorkspaceLayout,
+  createWorkspaceEntry,
   loadSettings,
   saveSettings,
-  listWorkspaceEntries
+  listWorkspaceEntries,
+  ROLE_PRESETS
 } = require('./lib/workspace');
 const { fetchModelsForProvider } = require('./lib/providerCatalog');
 
@@ -17,13 +19,16 @@ function getBootstrapPayload() {
       root: state.workspace.root,
       story: listWorkspaceEntries(state.workspace.story),
       characters: listWorkspaceEntries(state.workspace.characters),
-      sources: listWorkspaceEntries(state.workspace.sources)
+      lore: listWorkspaceEntries(state.workspace.lore),
+      sources: listWorkspaceEntries(state.workspace.sources),
+      logs: listWorkspaceEntries(state.workspace.logs)
     },
     logs: {
       panel: path.join(state.workspace.panelLogs, 'latest.log'),
       canvas: path.join(state.workspace.canvasLogs, 'latest.log')
     },
-    settings: state.settings
+    settings: state.settings,
+    presets: ROLE_PRESETS
   };
 }
 
@@ -69,6 +74,13 @@ app.whenReady().then(() => {
   ipcMain.handle('bookwork:get-models', async (_event, provider, options = {}) =>
     fetchModelsForProvider(provider, options)
   );
+  ipcMain.handle('bookwork:create-entry', async (_event, payload) => {
+    const result = createWorkspaceEntry(state.workspace, payload.section, payload.name, payload.content);
+    return {
+      result,
+      workspace: getBootstrapPayload().workspace
+    };
+  });
 
   createMainWindow();
 
