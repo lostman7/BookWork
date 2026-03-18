@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BookWork</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">BookWork</p>
+          <h1>Dual-model writing desk</h1>
+        </div>
+        <div class="topbar-actions">
+          <button id="open-workspace" class="secondary-button">Open workspace</button>
+          <button id="open-settings" class="primary-button">Settings</button>
+        </div>
+      </header>
+
+      <nav class="memory-bar card">
+        <button class="memory-chip active">Story</button>
+        <button class="memory-chip">Characters</button>
+        <button class="memory-chip">Lore</button>
+        <button class="memory-chip">Sources</button>
+        <button class="memory-chip">Logs</button>
+      </nav>
+
+      <main class="workspace-grid">
+        <aside class="panel-column card">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Panel AI</p>
+              <h2>Editor chat</h2>
+            </div>
+            <span class="status-pill">Ready</span>
+          </div>
+
+          <div class="chat-stream">
+            <div class="message user">Check page 47 for continuity against Ava's sheet, then fix grammar if it is obvious.</div>
+            <div class="message assistant">Got it. I’ll send a structured review task to the Canvas AI and report back with findings.</div>
+            <div class="task-callout">
+              <strong>Delegated:</strong>
+              <span>review_and_revise · page 47 · suggest_only</span>
+            </div>
+          </div>
+
+          <div class="composer">
+            <textarea placeholder="Talk to the Panel AI here..."></textarea>
+            <button class="primary-button full-width">Send instruction</button>
+          </div>
+        </aside>
+
+        <section class="canvas-column card">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Canvas AI</p>
+              <h2>Story canvas</h2>
+            </div>
+            <span class="status-pill muted">Suggest only</span>
+          </div>
+
+          <div class="canvas-panels">
+            <section>
+              <h3>Current draft</h3>
+              <article class="draft-surface">
+                <h4>Chapter 7 · Page 47</h4>
+                <p>
+                  Ava stepped into the hall and gripped the silver key so hard her hand shook.
+                  Rain hissed against the windows, and the hallway smelled like metal and old dust.
+                </p>
+                <p>
+                  The Canvas AI is where tracked changes, inline suggestions, and scene-level review
+                  results will appear.
+                </p>
+              </article>
+            </section>
+
+            <section>
+              <h3>Workspace folders</h3>
+              <div class="folder-columns">
+                <div>
+                  <h4>Story</h4>
+                  <ul id="story-list" class="item-list"></ul>
+                </div>
+                <div>
+                  <h4>Characters</h4>
+                  <ul id="character-list" class="item-list"></ul>
+                </div>
+                <div>
+                  <h4>Sources</h4>
+                  <ul id="source-list" class="item-list"></ul>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <aside class="log-column card">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Shared logs</p>
+              <h2>Handshake + memory state</h2>
+            </div>
+            <span class="status-pill">Visible</span>
+          </div>
+
+          <div class="log-stack">
+            <div class="log-entry ok">
+              <strong>Canvas accepted task</strong>
+              <span>Scope confirmed: page 47 · chapter 7</span>
+            </div>
+            <div class="log-entry warn">
+              <strong>Memory pulled</strong>
+              <span>character:ava · source:outline/chapter_7</span>
+            </div>
+            <div class="log-entry info">
+              <strong>Panel cache budget</strong>
+              <span id="panel-cache-badge">100 MB floating memory</span>
+            </div>
+            <div class="log-entry info">
+              <strong>Canvas cache budget</strong>
+              <span id="canvas-cache-badge">100 MB floating memory</span>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <dialog id="settings-dialog" class="settings-dialog">
+      <form method="dialog" class="settings-card" id="settings-form">
+        <div class="section-header settings-header">
+          <div>
+            <p class="eyebrow">Routing</p>
+            <h2>Model + memory settings</h2>
+          </div>
+          <button value="cancel" class="secondary-button">Close</button>
+        </div>
+
+        <div class="settings-grid">
+          <section class="settings-section">
+            <h3>Panel AI</h3>
+            <label>Provider <select name="panel-provider"><option value="ollama">Ollama</option><option value="lmstudio">LM Studio</option><option value="openrouter">OpenRouter</option></select></label>
+            <label>Model <input name="panel-model" type="text" /></label>
+            <label>Context window <input name="panel-context" type="number" min="1024" step="1024" /></label>
+            <label>Compute preference <select name="panel-compute"><option value="gpu">GPU</option><option value="system-memory">System memory</option><option value="auto">Auto</option></select></label>
+            <label>Keep alive <input name="panel-keepalive" type="text" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h3>Canvas AI</h3>
+            <label>Provider <select name="canvas-provider"><option value="ollama">Ollama</option><option value="lmstudio">LM Studio</option><option value="openrouter">OpenRouter</option><option value="openai">OpenAI</option></select></label>
+            <label>Model <input name="canvas-model" type="text" /></label>
+            <label>Context window <input name="canvas-context" type="number" min="1024" step="1024" /></label>
+            <label>Compute preference <select name="canvas-compute"><option value="system-memory">System memory</option><option value="gpu">GPU</option><option value="auto">Auto</option></select></label>
+            <label>Keep alive <input name="canvas-keepalive" type="text" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h3>Shared project memory</h3>
+            <label>Project name <input name="project-name" type="text" /></label>
+            <label>Retrieval depth <input name="retrieval-depth" type="number" min="1" max="30" /></label>
+            <label>Floating memory per role (MB) <input name="cache-size" type="number" min="10" max="1024" step="10" /></label>
+            <p class="settings-note">
+              Use a smaller GPU-friendly model for chat and a larger-context model for the canvas.
+              Ollama-specific context changes map to `num_ctx` / `OLLAMA_CONTEXT_LENGTH`.
+            </p>
+          </section>
+        </div>
+
+        <menu class="settings-actions">
+          <button value="cancel" class="secondary-button">Cancel</button>
+          <button id="save-settings" value="default" class="primary-button">Save settings</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

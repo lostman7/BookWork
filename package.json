@@ -1,0 +1,14 @@
+{
+  "name": "bookwork",
+  "version": "0.1.0",
+  "description": "Standalone Electron shell for the BookWork dual-model writing workspace.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "check": "node --check src/main.js && node --check src/preload.js && node --check src/lib/workspace.js && node --check src/renderer/app.js"
+  },
+  "devDependencies": {
+    "electron": "^37.2.0"
+  }
+}
