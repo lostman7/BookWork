@@ -35,6 +35,12 @@ const panelPresetCommands = document.getElementById('panel-preset-commands');
 const canvasPresetTitle = document.getElementById('canvas-preset-title');
 const canvasPresetMission = document.getElementById('canvas-preset-mission');
 const canvasPresetCommands = document.getElementById('canvas-preset-commands');
+const canvasEditor = document.getElementById('canvas-editor');
+const canvasLineNumbers = document.getElementById('canvas-line-numbers');
+const selectionBadge = document.getElementById('selection-badge');
+const selectionFocusText = document.getElementById('selection-focus-text');
+const canvasEditorShell = document.getElementById('canvas-editor-shell');
+const toastRegion = document.getElementById('toast-region');
 
 const ROLE_FIELDS = {
   panel: {
@@ -52,22 +58,27 @@ const ROLE_FIELDS = {
 const TAB_COPY = {
   story: {
     title: 'Story',
+    addLabel: 'story item',
     description: 'Select the working draft and create manuscript files here.'
   },
   characters: {
     title: 'Characters',
+    addLabel: 'character',
     description: 'Add character cards so both AIs can pull voices, roles, and continuity facts.'
   },
   lore: {
     title: 'Lore',
+    addLabel: 'lore entry',
     description: 'Store canon, world rules, timeline notes, and setting details here.'
   },
   sources: {
     title: 'Sources',
+    addLabel: 'source note',
     description: 'Drop outlines, references, research notes, and style guides here.'
   },
   logs: {
     title: 'Logs',
+    addLabel: 'log note',
     description: 'Save operator notes or workflow logs that the system can inspect later.'
   }
 };
@@ -100,6 +111,18 @@ function appendChatMessage(kind, text) {
   chatStream.scrollTop = chatStream.scrollHeight;
 }
 
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  toastRegion.appendChild(toast);
+  window.setTimeout(() => toast.classList.add('visible'), 10);
+  window.setTimeout(() => {
+    toast.classList.remove('visible');
+    window.setTimeout(() => toast.remove(), 250);
+  }, 2200);
+}
+
 function renderPreset(cardTitle, missionNode, commandNode, preset) {
   cardTitle.textContent = preset.title;
   missionNode.textContent = preset.mission;
@@ -117,53 +140,110 @@ function setActiveMemoryTab(tab) {
   activeMemoryTab = tab;
   activeMemoryTitle.textContent = TAB_COPY[tab].title;
   activeMemoryDescription.textContent = TAB_COPY[tab].description;
-  addMemoryItemButton.textContent = `Add ${TAB_COPY[tab].title.slice(0, -1) || TAB_COPY[tab].title}`;
+  addMemoryItemButton.textContent = `Add ${TAB_COPY[tab].addLabel}`;
 
   memoryBar.querySelectorAll('.memory-chip').forEach((chip) => {
     chip.classList.toggle('active', chip.dataset.tab === tab);
   });
 }
 
-function summarizeTask(userText) {
-  const trimmed = userText.trim();
-  if (!trimmed) {
+function syncLineNumbers() {
+  const lineCount = canvasEditor.value.split('\n').length;
+  canvasLineNumbers.textContent = Array.from({ length: lineCount }, (_, index) => index + 1).join('\n');
+}
+
+function getSelectionState() {
+  const { selectionStart, selectionEnd, value } = canvasEditor;
+  if (selectionStart === selectionEnd) {
     return null;
   }
 
-  const short = trimmed.length > 90 ? `${trimmed.slice(0, 87)}...` : trimmed;
+  const selectedText = value.slice(selectionStart, selectionEnd).trim();
+  const beforeStart = value.slice(0, selectionStart);
+  const beforeEnd = value.slice(0, selectionEnd);
+  const startLine = beforeStart.split('\n').length;
+  const endLine = beforeEnd.split('\n').length;
+
   return {
-    request: short,
-    taskLabel: `review_and_revise · ${short}`,
-    canvasStatus: `Canvas AI is reviewing the delegated task: “${short}”`,
-    memorySummary: 'Pulled shared project memory, story context, and any matching character/source records.',
-    assistantReply: `Got it. I’ll handle the conversation here, turn that into a structured canvas task, and report back after the Canvas AI finishes its review.`
+    selectedText,
+    startLine,
+    endLine
+  };
+}
+
+function updateSelectionState() {
+  const selection = getSelectionState();
+  if (!selection) {
+    selectionBadge.textContent = 'No selection';
+    selectionFocusText.textContent = 'Highlight lines in the canvas to aim the Canvas AI at a specific passage.';
+    canvasEditorShell.classList.remove('selection-active');
+    return;
+  }
+
+  selectionBadge.textContent = `Lines ${selection.startLine}-${selection.endLine}`;
+  selectionFocusText.textContent = `Selected lines ${selection.startLine}-${selection.endLine}: “${selection.selectedText.slice(0, 160)}”`;
+  canvasEditorShell.classList.add('selection-active');
+}
+
+function interpretChatIntent(message) {
+  const lowered = message.toLowerCase();
+  const selection = getSelectionState();
+  const actionWords = ['rewrite', 'fix', 'check', 'review', 'edit', 'look at', 'go over', 'line ', 'lines ', 'highlight', 'selected'];
+  const shouldDelegate = actionWords.some((word) => lowered.includes(word)) || Boolean(selection && lowered.includes('this'));
+
+  if (!shouldDelegate) {
+    return {
+      type: 'chat',
+      response:
+        'Absolutely — we can talk through the story naturally here. If you want me to send something to the Canvas AI, just highlight text or mention a line number and tell me what to do.'
+    };
+  }
+
+  const focusLabel = selection
+    ? `selected lines ${selection.startLine}-${selection.endLine}`
+    : lowered.includes('line ')
+      ? 'the referenced lines'
+      : 'the current canvas scope';
+
+  return {
+    type: 'delegate',
+    focusLabel,
+    selection,
+    response: `Got it. I’ll treat this as a canvas task, aim the Canvas AI at ${focusLabel}, and then report back here once it finishes the pass.`
   };
 }
 
 function runPanelHandshake(userText) {
-  const task = summarizeTask(userText);
-  if (!task) {
+  const intent = interpretChatIntent(userText);
+  appendChatMessage('user', userText.trim());
+
+  if (intent.type === 'chat') {
+    appendChatMessage('assistant', intent.response);
     return;
   }
 
-  appendChatMessage('user', userText.trim());
-  appendChatMessage('assistant', task.assistantReply);
+  appendChatMessage('assistant', intent.response);
 
+  const selectionDetail = intent.selection
+    ? ` · lines ${intent.selection.startLine}-${intent.selection.endLine}`
+    : '';
   panelTaskCallout.classList.remove('hidden');
-  panelTaskText.textContent = task.taskLabel;
-  canvasStatusText.textContent = task.canvasStatus;
+  panelTaskText.textContent = `review_and_revise${selectionDetail} · ${userText.trim()}`;
+  canvasStatusText.textContent = `Canvas AI is reviewing ${intent.focusLabel} for: “${userText.trim()}”`;
   canvasModePill.textContent = 'Delegated by Panel AI';
-  canvasLogText.textContent = `Scope confirmed for delegated task: ${task.request}`;
-  memoryLogText.textContent = task.memorySummary;
+  canvasLogText.textContent = `Scope confirmed: ${intent.focusLabel}`;
+  memoryLogText.textContent = intent.selection
+    ? `Pulled selection lines ${intent.selection.startLine}-${intent.selection.endLine} plus shared memory.`
+    : 'Pulled shared project memory and current canvas scope.';
 
   window.setTimeout(() => {
     appendChatMessage(
       'assistant',
-      'The Canvas AI finished its first pass. Review the canvas and logs, and if you want, I can send a follow-up instruction or tighten the scope.'
+      `The Canvas AI finished a first pass on ${intent.focusLabel}. If you want, I can send a tighter rewrite, check continuity again, or work on another highlighted section.`
     );
-    canvasStatusText.textContent = `Canvas AI completed the delegated review for: “${task.request}”`;
+    canvasStatusText.textContent = `Canvas AI completed the delegated review for ${intent.focusLabel}.`;
     canvasModePill.textContent = 'Suggest only';
-    canvasLogText.textContent = `Canvas AI completed the delegated task for: ${task.request}`;
+    canvasLogText.textContent = `Canvas AI completed the delegated task for ${intent.focusLabel}`;
   }, 450);
 }
 
@@ -266,6 +346,8 @@ async function bootstrapApp() {
   renderPreset(panelPresetTitle, panelPresetMission, panelPresetCommands, bootstrap.presets.panel);
   renderPreset(canvasPresetTitle, canvasPresetMission, canvasPresetCommands, bootstrap.presets.canvas);
   setActiveMemoryTab(activeMemoryTab);
+  syncLineNumbers();
+  updateSelectionState();
 }
 
 openSettingsButton.addEventListener('click', () => {
@@ -288,6 +370,14 @@ panelComposer.addEventListener('submit', (event) => {
   panelInput.focus();
 });
 
+canvasEditor.addEventListener('input', () => {
+  syncLineNumbers();
+  updateSelectionState();
+});
+canvasEditor.addEventListener('select', updateSelectionState);
+canvasEditor.addEventListener('click', updateSelectionState);
+canvasEditor.addEventListener('keyup', updateSelectionState);
+
 memoryBar.addEventListener('click', (event) => {
   const button = event.target.closest('.memory-chip');
   if (!button) {
@@ -298,7 +388,7 @@ memoryBar.addEventListener('click', (event) => {
 });
 
 addMemoryItemButton.addEventListener('click', () => {
-  memoryDialogTitle.textContent = `Add ${TAB_COPY[activeMemoryTab].title.slice(0, -1) || TAB_COPY[activeMemoryTab].title}`;
+  memoryDialogTitle.textContent = `Add ${TAB_COPY[activeMemoryTab].addLabel}`;
   memoryDialogHint.textContent = `This item will be saved into ${TAB_COPY[activeMemoryTab].title}.`;
   memoryItemName.value = '';
   memoryItemContent.value = '';
@@ -321,7 +411,7 @@ memoryForm.addEventListener('submit', async (event) => {
   bootstrap.workspace = result.workspace;
   renderWorkspaceLists(bootstrap.workspace);
   memoryDialog.close();
-  appendChatMessage('assistant', `Saved “${payload.name}” into ${TAB_COPY[activeMemoryTab].title}. Both AIs can now pull from it.`);
+  showToast(`New ${TAB_COPY[activeMemoryTab].addLabel} added`);
   memoryLogText.textContent = `Updated shared memory from ${TAB_COPY[activeMemoryTab].title}: ${result.result.name}`;
 });
 

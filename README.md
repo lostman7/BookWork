@@ -46,7 +46,7 @@ That matches your idea of a shared story area plus separate role-aware memory bu
 The current app shell is designed around this structure:
 
 - **Left sidebar**: the only user-facing chat surface; the writer talks here and the Panel AI delegates work inward to the Canvas AI.
-- **Center canvas**: manuscript surface and workspace file lists.
+- **Center canvas**: manuscript surface with line numbers, text highlighting, and workspace file lists.
 - **Right log rail**: handshake visibility, source usage, and memory state.
 - **Top memory bar**: Story, Characters, Lore, Sources, and Logs tabs with an add action that saves new items into the local workspace.
 - **Settings button**: model routing, context sizes, compute preference, and cache settings.
@@ -62,7 +62,9 @@ The app shell includes a settings dialog for:
 - compute preference for each role,
 - keep-alive behavior,
 - retrieval depth,
-- and floating memory size per role.
+- floating memory size per role,
+- selection-aware canvas work,
+- and toast feedback for newly added project items.
 
 That means the setup can match the workflow you described:
 

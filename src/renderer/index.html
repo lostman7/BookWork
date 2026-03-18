@@ -28,7 +28,7 @@
             <button class="memory-chip" data-tab="sources">Sources</button>
             <button class="memory-chip" data-tab="logs">Logs</button>
           </nav>
-          <button id="add-memory-item" class="ghost-button">Add item</button>
+          <button id="add-memory-item" class="ghost-button">Add story item</button>
         </div>
         <div class="memory-status">
           <strong id="active-memory-title">Story</strong>
@@ -47,7 +47,7 @@
           </div>
 
           <div id="chat-stream" class="chat-stream">
-            <div class="message assistant">Talk to the Panel AI here. It will be the only user-facing chat surface and will delegate document work to the Canvas AI for you.</div>
+            <div class="message assistant">Talk to the Panel AI here. It can chat naturally about your story, and when you want actual document work, it will delegate that to the Canvas AI.</div>
           </div>
 
           <div id="panel-task-callout" class="task-callout hidden">
@@ -56,7 +56,7 @@
           </div>
 
           <form id="panel-composer" class="composer">
-            <textarea id="panel-input" placeholder="Talk to the Panel AI here..."></textarea>
+            <textarea id="panel-input" placeholder="Chat with the editor AI or ask it to work on the selected lines..."></textarea>
             <button id="send-instruction" type="submit" class="primary-button full-width">Send instruction</button>
           </form>
         </aside>
@@ -72,18 +72,25 @@
 
           <div class="canvas-panels">
             <section>
-              <h3>Current draft</h3>
-              <article class="draft-surface">
-                <h4>Chapter 7 · Page 47</h4>
-                <p>
-                  Ava stepped into the hall and gripped the silver key so hard her hand shook.
-                  Rain hissed against the windows, and the hallway smelled like metal and old dust.
-                </p>
-                <p>
-                  The Canvas AI is where tracked changes, inline suggestions, and scene-level review
-                  results will appear.
-                </p>
-              </article>
+              <div class="section-header compact-header">
+                <div>
+                  <h3>Current draft</h3>
+                  <p class="eyebrow">Highlight text or refer to line numbers in chat.</p>
+                </div>
+                <div id="selection-badge" class="selection-badge">No selection</div>
+              </div>
+              <div id="canvas-editor-shell" class="canvas-editor-shell">
+                <pre id="canvas-line-numbers" class="canvas-line-numbers" aria-hidden="true"></pre>
+                <textarea id="canvas-editor" class="canvas-editor" spellcheck="false">Ava stepped into the hall and gripped the silver key so hard her hand shook.
+Rain hissed against the windows, and the hallway smelled like metal and old dust.
+The lock looked older than the house itself, black with oil and soot.
+She hesitated because the outline said she should not still have the key.
+Then she stepped forward anyway, listening for movement beyond the door.</textarea>
+              </div>
+              <div id="selection-focus-card" class="canvas-status-card">
+                <strong>Selection focus</strong>
+                <span id="selection-focus-text">Highlight lines in the canvas to aim the Canvas AI at a specific passage.</span>
+              </div>
               <div id="canvas-status-card" class="canvas-status-card">
                 <strong>Canvas AI status</strong>
                 <span id="canvas-status-text">Waiting for the Panel AI to delegate a document task.</span>
@@ -153,6 +160,8 @@
         </aside>
       </main>
     </div>
+
+    <div id="toast-region" class="toast-region" aria-live="polite"></div>
 
     <dialog id="memory-dialog" class="settings-dialog">
       <form method="dialog" class="settings-card narrow-card" id="memory-form">
