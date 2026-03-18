@@ -16,7 +16,7 @@ This repository now includes an Electron shell with:
 - a dark desktop layout for chat, canvas, and logs,
 - a settings dialog for Panel AI and Canvas AI model routing,
 - local workspace bootstrapping for story files, characters, sources, logs, and role-specific memory,
-- and a default project structure that the app creates in Electron's `userData` directory.
+- and a default project structure that the app creates in a local `BookWorkData/` folder next to where the app is run from.
 
 ## Why Electron
 
@@ -29,7 +29,7 @@ Electron is a good fit for this project because it gives you:
 
 ## Workspace layout
 
-On first launch, BookWork creates a local workspace with folders for:
+On first launch, BookWork creates a local `BookWorkData/` folder beside the running app/project and then creates a workspace with folders for:
 
 - `story/` for manuscript files,
 - `characters/` for character cards,

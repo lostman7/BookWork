@@ -51,7 +51,8 @@ function createMainWindow() {
 }
 
 app.whenReady().then(() => {
-  const bookworkRoot = path.join(app.getPath('userData'), 'bookwork');
+  const baseDir = app.isPackaged ? path.dirname(app.getPath('exe')) : process.cwd();
+  const bookworkRoot = path.join(baseDir, 'BookWorkData');
   const workspace = createWorkspaceLayout(bookworkRoot);
   const settingsPath = path.join(bookworkRoot, 'settings.json');
   const settings = loadSettings(settingsPath);

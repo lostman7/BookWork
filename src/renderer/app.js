@@ -2,6 +2,10 @@ const settingsDialog = document.getElementById('settings-dialog');
 const settingsForm = document.getElementById('settings-form');
 const memoryDialog = document.getElementById('memory-dialog');
 const memoryForm = document.getElementById('memory-form');
+const memoryDialogCloseButton = document.getElementById('memory-dialog-close');
+const memoryDialogCancelButton = document.getElementById('memory-dialog-cancel');
+const settingsDialogCloseButton = document.getElementById('settings-dialog-close');
+const settingsDialogCancelButton = document.getElementById('settings-dialog-cancel');
 const openSettingsButton = document.getElementById('open-settings');
 const openWorkspaceButton = document.getElementById('open-workspace');
 const addMemoryItemButton = document.getElementById('add-memory-item');
@@ -357,6 +361,11 @@ openSettingsButton.addEventListener('click', () => {
 openWorkspaceButton.addEventListener('click', async () => {
   await window.bookwork.openWorkspace();
 });
+
+memoryDialogCloseButton.addEventListener('click', () => memoryDialog.close());
+memoryDialogCancelButton.addEventListener('click', () => memoryDialog.close());
+settingsDialogCloseButton.addEventListener('click', () => settingsDialog.close());
+settingsDialogCancelButton.addEventListener('click', () => settingsDialog.close());
 
 panelComposer.addEventListener('submit', (event) => {
   event.preventDefault();
